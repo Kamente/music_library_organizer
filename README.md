@@ -9,6 +9,10 @@ KAMENTE JUSTIN
 ```
 
 
+## Contact
+For any inquires reach me out at:
+<mugambijustin48@gmail.com>
+
 ## License
 
 Copyright (c) 2023 Kamente Justin
