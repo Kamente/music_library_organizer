@@ -8,13 +8,11 @@ DATABASE_URI = 'sqlite:///music.db'
 engine = create_engine(DATABASE_URI, echo=True)
 Base = declarative_base()
 
-# Define the association table for playlist and songs
 class PlaylistSongs(Base):
     __tablename__ = 'playlist_songs'
     playlist_id = Column(Integer, ForeignKey('playlists.playlist_id'), primary_key=True)
     song_id = Column(Integer, ForeignKey('songs.song_id'), primary_key=True)
 
-# Define the association table for user and playlists
 class UserPlaylists(Base):
     __tablename__ = 'user_playlists'
     user_id = Column(Integer, ForeignKey('users.user_id'), primary_key=True)
@@ -45,20 +43,18 @@ class Album(Base):
     # Many-to-One relationship: Albums to Artist
     artist = relationship('Artist', back_populates='albums')
     
-    # One-to-Many relationship: Album to Songs
     songs = relationship('Song', back_populates='album')
 
     def __repr__(self):
         return f'Album(album_id = {self.album_id},' +\
             f'album_title = {self.album_title}, '+\
                 f'artist_id = {self.artist_id})'
-    
+
 class Genre(Base):
     __tablename__ = 'genres'
     genre_id = Column(Integer, primary_key=True)
     genre_name = Column(String)
     
-    # One-to-Many relationship: Genre to Songs
     songs = relationship('Song', back_populates='genre')
 
     def __repr__(self):
@@ -91,14 +87,8 @@ class Song(Base):
     
     # Many-to-One relationship: Songs to Album
     album = relationship('Album', back_populates='songs')
-    
-    # Many-to-One relationship: Songs to Artist
     artist = relationship('Artist', back_populates='songs')
-    
-    # Many-to-One relationship: Songs to Genre
     genre = relationship('Genre', back_populates='songs')
-    
-    # Many-to-Many relationship: Songs to Playlists
     playlists = relationship('Playlist', secondary='playlist_songs', back_populates='songs')
 
     def __repr__(self):
