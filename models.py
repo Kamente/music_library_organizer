@@ -101,5 +101,5 @@ class UserPlaylists(Base):
                 f'playlists_id={self.playlists_id})'
 
 Base.metadata.create_all(bind=engine)
-Session = session_maker(bind=engine)
+Session = sessionmaker(bind=engine)
 session = Session
