@@ -10,9 +10,9 @@ KAMENTE JUSTIN
 
 ## Project Description
 ```
-The Music Library Organizer Project is a software application designed to 
-help users organize their music library. It provides functionalities to 
-manage artists, albums, songs, genres, playlists, and user accounts.
+The Music Library Organizer Project is a software application designed to help users organize
+their music library. It provides functionalities to manage artists, albums, songs, 
+genres, playlists, and user accounts.
 ```
 
 
