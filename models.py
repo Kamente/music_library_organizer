@@ -1,8 +1,7 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
-from sqlalchemy.orm import mapper
+from sqlalchemy.orm import sessionmaker, relationship, backref
+from sqlalchemy import Column, Integer, String
 
 DATABASE_URI = 'sqlite:///music.db'
 engine = create_engine(DATABASE_URI, echo=True)
@@ -18,63 +17,34 @@ class UserPlaylists(Base):
     user_id = Column(Integer, ForeignKey('users.user_id'), primary_key=True)
     playlist_id = Column(Integer, ForeignKey('playlists.playlist_id'), primary_key=True)
 
+    user = relationship('User', back_populates='playlists')
+    playlist = relationship('Playlist', back_populates='users')
+
 class Artist(Base):
     __tablename__ = 'artists'
     artist_id = Column(Integer, primary_key=True)
     artist_name = Column(String)
     
-    # One-to-Many relationship: Artist to Albums
-    albums = relationship('Album', back_populates='artist')
-    
-    # One-to-Many relationship: Artist to Songs
-    songs = relationship('Song', back_populates='artist')
+    songs = relationship('Song', back_populates='artist_obj')
 
     def __repr__(self):
         return f'Artist(artist_id={self.artist_id}, ' + \
             f'artist_name="{self.artist_name}")'
-
 
 class Album(Base):
     __tablename__ = 'albums'
     album_id = Column(Integer, primary_key=True)
     album_title = Column(String)
     artist_id = Column(Integer, ForeignKey('artists.artist_id'))
-    
-    # Many-to-One relationship: Albums to Artist
+
     artist = relationship('Artist', back_populates='albums')
-    
-    songs = relationship('Song', back_populates='album')
+
+    songs = relationship('Song', back_populates='album') 
 
     def __repr__(self):
-        return f'Album(album_id = {self.album_id},' +\
-            f'album_title = {self.album_title}, '+\
-                f'artist_id = {self.artist_id})'
-
-class Genre(Base):
-    __tablename__ = 'genres'
-    genre_id = Column(Integer, primary_key=True)
-    genre_name = Column(String)
-    
-    songs = relationship('Song', back_populates='genre')
-
-    def __repr__(self):
-        return f'Genre(genre_id = {self.genre_id},'+\
-            f'genre_name = {self.genre_name})'
-
-class Playlist(Base):
-    __tablename__ = 'playlists'
-    playlist_id = Column(Integer, primary_key=True)
-    playlist_title = Column(String)
-    
-    # Many-to-Many relationship: Playlists to Songs
-    songs = relationship('Song', secondary='playlist_songs', back_populates='playlists')
-    
-    # Many-to-Many relationship: Playlists to Users
-    users = relationship('User', secondary='use', back_populates='playlists')
-
-    def __repr__(self):
-        return f'Playlist(playlist_id = {self.playlist_id}, '+\
-            f'playlist_title = {self.playlist_title})'
+        return f'Album(album_id={self.album_id}, ' +\
+            f'album_title="{self.album_title}", '+\
+            f'artist_id={self.artist_id})'
 
 class Song(Base):
     __tablename__ = 'songs'
@@ -84,32 +54,51 @@ class Song(Base):
     album_id = Column(Integer, ForeignKey('albums.album_id'))
     artist_id = Column(Integer, ForeignKey('artists.artist_id'))
     genre_id = Column(Integer, ForeignKey('genres.genre_id'))
-    
-    # Many-to-One relationship: Songs to Album
-    album = relationship('Album', back_populates='songs')
-    artist = relationship('Artist', back_populates='songs')
-    genre = relationship('Genre', back_populates='songs')
-    playlists = relationship('Playlist', secondary='playlist_songs', back_populates='songs')
+
+    album = relationship('Album', back_populates='songs')  
+    artist = relationship('Artist', back_populates='songs_obj', foreign_keys='[Song.artist_id]')
+    genre = relationship('Genre', back_populates='songs_obj', foreign_keys='[Song.genre_id]')
+    playlists = relationship('Playlist', secondary='playlist_songs', back_populates='songs_obj')
 
     def __repr__(self):
-          return f'Song(song_id={self.song_id},'+\
-              f'song_title="{self.song_title}",'+\
-                  f'song_duration={self.song_duration},'+\
-                      f'album_id={self.album_id},'+\
-                          f'artist_id={self.artist_id},'+\
-                              f'genre_id={self.genre_id})'
+        return f'Song(song_id={self.song_id}, ' +\
+            f'song_title="{self.song_title}", ' +\
+            f'song_duration={self.song_duration}, ' +\
+            f'album_id={self.album_id}, ' +\
+            f'artist_id={self.artist_id}, ' +\
+            f'genre_id={self.genre_id})'
+
+class Genre(Base):
+    __tablename__ = 'genres'
+    genre_id = Column(Integer, primary_key=True)
+    genre_name = Column(String)
+    
+    songs = relationship('Song', back_populates='song_genre')
+
+    def __repr__(self):
+        return f'Genre(genre_id={self.genre_id}, ' +\
+            f'genre_name="{self.genre_name}")'
 
 class User(Base):
     __tablename__ = 'users'
     user_id = Column(Integer, primary_key=True)
     user_name = Column(String)
-    
-    # Many-to-Many relationship: Users to Playlists
-    playlists = relationship('Playlist', secondary='use', back_populates='users')
+
+    playlists = relationship('Playlist', secondary='user_playlists', back_populates='users') 
 
     def __repr__(self):
-        return f'User(user_id={self.user_id},'+\
-            f'user_name="{self.user_name}")'
+        return f'User(user_id={self.user_id}, user_name="{self.user_name}")'
+
+class Playlist(Base):
+    __tablename__ = 'playlists'
+    playlist_id = Column(Integer, primary_key=True)
+    playlist_name = Column(String)
+
+    users = relationship('User', secondary='user_playlists', back_populates='playlists') 
+    songs = relationship('Song', secondary='playlist_songs', back_populates='playlists_obj')
+
+    def __repr__(self):
+        return f'Playlist(playlist_id={self.playlist_id}, playlist_name="{self.playlist_name}")'
 
 Base.metadata.create_all(bind=engine)
 Session = sessionmaker(bind=engine)
