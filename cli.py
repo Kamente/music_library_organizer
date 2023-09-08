@@ -211,6 +211,26 @@ def list_playlist_songs():
     print("List of Playlist Songs:")
     print(table)
 
+@cli.command()
+@click.option('--title', help='Filter songs by title')
+def list_songs(title):
+    songs = session.query(Song).all()
+
+    if title:
+        songs = [song for song in songs if title.lower() in song.song_title.lower()]
+
+    song_data = [
+        (song.song_id, song.song_title, song.album.album_title, song.artist.artist_name, song.genre.genre_name)
+        for song in songs
+    ]
+
+    headers = ["Song ID", "Song Title", "Album Title", "Artist Name", "Genre Name"]
+
+    table = tabulate(song_data, headers, tablefmt="grid")
+
+    print("List of Songs:")
+    print(table)
+
 
 if __name__ == '__main__':
     cli()
